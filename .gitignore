@@ -21,6 +21,7 @@ build/
 *.manifest
 *.dll
 *.pyd
+installer/
 
 # Release folder (generated)
 release/
