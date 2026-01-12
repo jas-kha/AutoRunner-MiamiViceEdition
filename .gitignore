@@ -1,0 +1,99 @@
+# ==========================================
+# Python general
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual env
+venv/
+ENV/
+env/
+.venv/
+
+# ==========================================
+# Build & Distribution (PyInstaller)
+# ==========================================
+dist/
+build/
+*.spec
+*.egg-info
+*.manifest
+*.dll
+*.pyd
+
+# Release folder (generated)
+release/
+
+# ==========================================
+# Logs
+# ==========================================
+*.log
+*.tmp
+*.temp
+auto_runner.spec
+
+# ==========================================
+# OS specific
+# ==========================================
+# Windows
+Thumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+.cache/
+
+# ==========================================
+# IDE / Editor files
+# ==========================================
+
+# VSCode
+.vscode/
+.history/
+
+# PyCharm / JetBrains
+.idea/
+*.iml
+
+# Sublime
+*.sublime-workspace
+*.sublime-project
+
+# ==========================================
+# Custom App Files
+# ==========================================
+
+# Recent project history
+recent.json
+
+# Compiled executable output
+*.exe
+
+# Qt temporary build cache (if any)
+*.qrc
+
+# Temp testing folders
+temp/
+tmp/
+
+# ==========================================
+# Backup files
+# ==========================================
+*~
+*.bak
+*.orig
+*.swp
+
+# ==========================================
+# Python build tools cache
+# ==========================================
+.pytest_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+.cache/
