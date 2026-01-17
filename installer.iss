@@ -2,16 +2,16 @@
 ; AutoRunner Installer
 ; -------------------------------
 
-#define MyAppName "AutoRunner"
-#define MyAppVersion "1.0.0"
-#define MyAppExeName "auto_runner.exe"
+#define MyAppName "Auto Runner"
+#define MyAppVersion "1.1.2"
+#define MyAppExeName "AutoRunner.exe"
 
 [Setup]
-AppId={{A1B2C3D4-E5F6-7890-1234-ABCDEF123456}}
+AppId={{F3A9C5E2-7D4B-4C8F-9A6E-1B2D3C7F5A66}}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
-AppPublisher="JasKha"
-DefaultDirName={pf}\{#MyAppName}
+AppPublisher="JK Software"
+DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 OutputDir=installer
 OutputBaseFilename=AutoRunnerSetup
@@ -20,7 +20,7 @@ Compression=lzma
 SolidCompression=yes
 
 [Files]
-Source:"dist\auto_runner.exe"; DestDir:"{app}"; Flags: ignoreversion
+Source:"dist\AutoRunner.exe"; DestDir:"{app}"; Flags: ignoreversion
 Source:"icon.ico"; DestDir:"{app}"
 
 [Icons]

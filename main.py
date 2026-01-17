@@ -1,7 +1,6 @@
 import sys
 import json
 import os
-import time
 import subprocess
 
 from PyQt6.QtGui import QIcon
@@ -10,56 +9,20 @@ from PyQt6.QtWidgets import (
     QListWidget, QTextEdit, QFileDialog, QMessageBox, QHBoxLayout
 )
 from PyQt6.QtCore import QThread, pyqtSignal, Qt
+from scripts import APP_NAME, APP_PUBLISHER
+from splash import SplashScreen
 
 
 RECENT_FILE = "recent.json"
 
+RECENT_FILE = os.path.join(
+    os.getenv("APPDATA"),
+    APP_PUBLISHER,
+    APP_NAME,
+    "recent.json"
+)
 
-# ============================================================
-# SPLASH SCREEN
-# ============================================================
-class SplashScreen(QWidget):
-    def __init__(self):
-        super().__init__()
-
-        self.setFixedSize(500, 300)
-        self.setWindowFlags(
-            Qt.WindowType.FramelessWindowHint |
-            Qt.WindowType.WindowStaysOnTopHint
-        )
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
-        self.setStyleSheet("""
-        QWidget {
-            background: qlineargradient(
-                x1:0, y1:0, x2:1, y2:1,
-                stop:0 #ff00cc,
-                stop:1 #333399
-            );
-            border-radius: 20px;
-        }
-        QLabel {
-            color: white;
-            font-size: 28px;
-            font-weight: bold;
-        }
-        """)
-
-        layout = QVBoxLayout()
-        self.setLayout(layout)
-
-        l1 = QLabel("AutoRunner")
-        l2 = QLabel("Miami Vice Edition")
-        l2.setStyleSheet("font-size:18px; color:#ffddff;")
-
-        layout.addStretch()
-        layout.addWidget(l1, alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(l2, alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addStretch()
-
-        self.show()
-        QApplication.processEvents()
-        time.sleep(1.4)
+os.makedirs(os.path.dirname(RECENT_FILE), exist_ok=True)
 
 
 # ============================================================
@@ -348,33 +311,45 @@ class AutoRunnerApp(QWidget):
     # Recent List
     # ============================================================
     def load_recent(self):
-        if not os.path.exists(RECENT_FILE):
-            with open(RECENT_FILE, "w") as f:
-                json.dump([], f)
-
-        try:
-            paths = json.load(open(RECENT_FILE))
-        except:
-            paths = []
-            json.dump([], open(RECENT_FILE, "w"))
+        paths = self.read_recent()
 
         paths = [p for p in paths if os.path.isdir(p)]
-        json.dump(paths, open(RECENT_FILE, "w"), indent=2)
+        self.write_recent(paths)
 
         self.recent_list.clear()
         for p in paths:
             self.recent_list.addItem(p)
 
+
     def save_recent(self, path):
-        paths = json.load(open(RECENT_FILE))
+        paths = self.read_recent()
+
         if path not in paths:
             paths.insert(0, path)
-        json.dump(paths[:10], open(RECENT_FILE, "w"), indent=2)
+
+        self.write_recent(paths[:10])
         self.load_recent()
 
+
     def load_recent_selected(self):
-        p = self.recent_list.currentItem().text()
-        self.load_project(p)
+        item = self.recent_list.currentItem()
+        if not item:
+            return
+        self.load_project(item.text())
+
+    def read_recent(self):
+        os.makedirs(os.path.dirname(RECENT_FILE), exist_ok=True)
+
+        try:
+            with open(RECENT_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError, OSError):
+            return []
+
+    def write_recent(self, paths):
+        with open(RECENT_FILE, "w", encoding="utf-8") as f:
+            json.dump(paths, f, indent=2)
+
 
     # ============================================================
     # Load Project
