@@ -1,20 +1,20 @@
-<!-- <div align="center">
-  <img src=".github/WALPAPER.png" alt="Auto Runner Logo" width="350"/>
-</div> -->
+<div align="center">
+  <img src=".github/splash.png" alt="Auto Runner Logo" width="250"/>
+</div>
 
-<div style="background-color: purple; padding: 10px; border-radius: 10px; text-align: center; color: white;">
+<!-- <div style="background-color: purple; padding: 10px; border-radius: 10px; text-align: center; color: white;">
 
   ## Auto Runner
   ### Miami Vice Edition
 
-</div>
+</div> -->
 
 ---
 
 `Auto Runner` is a Python application that automatically runs a specified script whenever changes are detected in a designated directory. It is built using PyQt6 for the graphical user interface and watchdog for monitoring file system events.
 
 ## Screenshots
-![Screenshot 3](.github/run.png)
+![Screenshot 3](.github/window.png)
 
 ## Installation
 ### Download
@@ -22,8 +22,15 @@ You can download the latest release from the [Releases](https://github.com/jas-k
 
 ####  Quick Download Links
 
+#### Latest Versions
 | Setup Type | URL | Version |
 |-|-|-|
+| Installer | [Download AutoRunnerSetup.exe (latest)](https://github.com/jas-kha/AutoRunner-MiamiViceEdition/releases/download/download_v0.2.0.0/AutoRunnerSetup.exe) | v0.2.0.0 |
+| Portable | [Download Portable (latest)](https://github.com/jas-kha/AutoRunner-MiamiViceEdition/releases/download/download_v0.2.0.0/AutoRunner_portable.exe) | v0.2.0.0 |
+
+#### Stable Versions
+| Type | URL | Version |
+|------|-----|---------|
 | Installer | [Download AutoRunnerSetup.exe `Recommended`](https://github.com/jas-kha/AutoRunner-MiamiViceEdition/releases/download/download-v1.0.0/AutoRunnerSetup.exe) | v1.0.0 |
 | Portable | [Download Portable Version](https://github.com/jas-kha/AutoRunner-MiamiViceEdition/releases/download/download-v1.0.0/auto_runner_portable.exe) | v1.0.0 |
 
