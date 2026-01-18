@@ -32,6 +32,13 @@ You can download the latest release from the [Releases](https://github.com/jas-k
 ## `For Developers`
 ### Clone the repository
 
+### Install dependencies
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
 ### Quick Commands
 Run Code:
 ```

@@ -2,6 +2,7 @@ import sys
 import json
 import os
 import subprocess
+import re
 
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
@@ -23,6 +24,15 @@ RECENT_FILE = os.path.join(
 )
 
 os.makedirs(os.path.dirname(RECENT_FILE), exist_ok=True)
+
+
+# ============================================================
+# ANSI ESCAPE CODE REMOVER
+# ============================================================
+def strip_ansi_codes(text):
+    """Remove ANSI escape sequences from text"""
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    return ansi_escape.sub('', text)
 
 
 # ============================================================
@@ -62,7 +72,9 @@ class RunnerThread(QThread):
         for line in self.process.stdout:
             if not self.running:
                 break
-            self.log_signal.emit(line)
+            # Remove ANSI codes (colors etc.)
+            clean_line = strip_ansi_codes(line)
+            self.log_signal.emit(clean_line)
 
         if self.process and self.process.poll() is None:
             self.process.terminate()
@@ -172,7 +184,9 @@ class AutoRunnerApp(QWidget):
     def dropEvent(self, event):
         p = event.mimeData().urls()[0].toLocalFile()
         if os.path.isdir(p):
-            self.load_project(p)
+            # Path normalization - to have consistent slashes
+            normalized_path = os.path.normpath(p)
+            self.load_project(normalized_path)
 
     # ============================================================
     # Detect Package Manager
@@ -305,7 +319,9 @@ class AutoRunnerApp(QWidget):
     def open_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Choose Project Folder")
         if folder and os.path.isdir(folder):
-            self.load_project(folder)
+            # Path normalization
+            normalized_path = os.path.normpath(folder)
+            self.load_project(normalized_path)
 
     # ============================================================
     # Recent List
@@ -322,10 +338,12 @@ class AutoRunnerApp(QWidget):
 
 
     def save_recent(self, path):
+        # Path normalization - to save in a consistent format
+        normalized_path = os.path.normpath(path)
         paths = self.read_recent()
 
-        if path not in paths:
-            paths.insert(0, path)
+        if normalized_path not in paths:
+            paths.insert(0, normalized_path)
 
         self.write_recent(paths[:10])
         self.load_recent()
@@ -355,13 +373,14 @@ class AutoRunnerApp(QWidget):
     # Load Project
     # ============================================================
     def load_project(self, project_path):
-        self.project_path = project_path
-        self.package_manager = self.detect_package_manager(project_path)
+        # Path normalization
+        self.project_path = os.path.normpath(project_path)
+        self.package_manager = self.detect_package_manager(self.project_path)
 
-        self.info.setText(f"Project: {project_path}  |  PM: {self.package_manager}")
-        self.save_recent(project_path)
+        self.info.setText(f"Project: {self.project_path}  |  PM: {self.package_manager}")
+        self.save_recent(self.project_path)
 
-        pkg = os.path.join(project_path, "package.json")
+        pkg = os.path.join(self.project_path, "package.json")
         if not os.path.exists(pkg):
             QMessageBox.critical(self, "Error", "package.json not found!")
             return
