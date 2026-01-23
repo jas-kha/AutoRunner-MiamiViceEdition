@@ -1,3 +1,4 @@
 PyQt6==6.7.0
 watchdog==4.0.1
 pyinstaller==6.3.0
+qtawesome==1.4.0

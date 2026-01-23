@@ -2,10 +2,10 @@
 # ENHANCED SPLASH SCREEN
 # ============================================================
 
-import time
 from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve
 from PyQt6.QtWidgets import QWidget, QLabel, QVBoxLayout, QApplication, QProgressBar
 from PyQt6.QtGui import QFont, QPainter, QLinearGradient, QColor, QPen
+from core.fonts import AppFonts
 
 class SplashScreen(QWidget):
     def __init__(self):
@@ -26,10 +26,11 @@ class SplashScreen(QWidget):
         layout.setContentsMargins(40, 40, 40, 40)
 
         # Title
-        self.title = QLabel("🌆 AutoRunner")
+        self.title = QLabel("🌆 Auto Runner")
+        self.title.setFont(AppFonts.bold(32))
         self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_font = QFont("Arial", 32, QFont.Weight.Bold)
-        self.title.setFont(title_font)
+        # title_font = QFont("Arial", 32, QFont.Weight.Bold)
+        # self.title.setFont(title_font)
         self.title.setStyleSheet("""
             color: white;
             background: transparent;
@@ -39,14 +40,14 @@ class SplashScreen(QWidget):
         self.subtitle = QLabel("Miami Vice Edition")
         self.subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         subtitle_font = QFont("Arial", 16)
-        self.subtitle.setFont(subtitle_font)
+        self.subtitle.setFont(AppFonts.bold(16))
         self.subtitle.setStyleSheet("""
             color: #ffddff;
             background: transparent;
         """)
 
         # Version label
-        self.version = QLabel("v0.2.0.0 • Enhanced Edition")
+        self.version = QLabel("v0.2.1.1 • Enhanced Edition")
         self.version.setAlignment(Qt.AlignmentFlag.AlignCenter)
         version_font = QFont("Arial", 10)
         self.version.setFont(version_font)

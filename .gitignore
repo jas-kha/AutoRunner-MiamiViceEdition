@@ -35,6 +35,13 @@ release/
 auto_runner.spec
 
 # ==========================================
+# Application settings
+# ==========================================
+settings.json
+favorites.json
+recent.json
+
+# ==========================================
 # OS specific
 # ==========================================
 # Windows

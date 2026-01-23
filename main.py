@@ -1,24 +1,40 @@
 import sys
-import json
 import os
+import json
+import re
 import subprocess
 from datetime import datetime
+
+# ============================================================
+# Third-party imports
+# ============================================================
+import qtawesome as qta # pyright: ignore[reportMissingImports]
+
+from PyQt6.QtCore import Qt, QTimer, QSize
 from PyQt6.QtGui import QIcon, QTextCursor
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLabel, QPushButton,
-    QListWidget, QTextEdit, QFileDialog, QMessageBox, QHBoxLayout,
-    QTabWidget, QLineEdit, QComboBox
+    QListWidget, QFileDialog, QMessageBox, QHBoxLayout,
+    QTabWidget, QLineEdit, QComboBox, QTextBrowser
 )
-from PyQt6.QtCore import Qt, QTimer
 
+
+# ============================================================
+# Local imports
+# ============================================================
 # Load ui elements
 from ui.splash import SplashScreen
+from ui.themes import THEMES as themes
 
-# Load constants
+# Load constants and helper threads
 from core.constants import RECENT_FILE, FAVORITES_FILE, SETTINGS_FILE
+from core.utils import resource_path
+from core.fonts import AppFonts
+from core.theme_manager import ThemeManager
 from core.watcher import FileWatcherThread
 from core.runner import RunnerThread
 
+app = QApplication(sys.argv)
 
 # ============================================================
 # TERMINAL TAB
@@ -44,18 +60,24 @@ class TerminalTab(QWidget):
         # Quick actions row
         quick_row = QHBoxLayout()
         
-        self.open_folder_btn = QPushButton("📁 Open")
+        self.open_folder_btn = QPushButton(" Open")
+        self.open_folder_btn.setIcon(QIcon(resource_path("assets/icons/openFolder.png")))
+        self.open_folder_btn.setIconSize(QSize(64, 64))
         self.open_folder_btn.clicked.connect(self.open_folder)
         self.open_folder_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         quick_row.addWidget(self.open_folder_btn)
         
-        self.open_vscode_btn = QPushButton("🔷 VS Code")
+        self.open_vscode_btn = QPushButton(" VS Code")
+        self.open_vscode_btn.setIcon(QIcon(resource_path("assets/icons/vscode.png")))
+        self.open_vscode_btn.setIconSize(QSize(64, 64))
         self.open_vscode_btn.clicked.connect(self.open_in_vscode)
         self.open_vscode_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.open_vscode_btn.setEnabled(False)
         quick_row.addWidget(self.open_vscode_btn)
         
-        self.open_explorer_btn = QPushButton("📂 Explorer")
+        self.open_explorer_btn = QPushButton(" Explorer")
+        self.open_explorer_btn.setIcon(QIcon(resource_path("assets/icons/explorer.png")))
+        self.open_explorer_btn.setIconSize(QSize(64, 64))
         self.open_explorer_btn.clicked.connect(self.open_in_explorer)
         self.open_explorer_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.open_explorer_btn.setEnabled(False)
@@ -77,13 +99,15 @@ class TerminalTab(QWidget):
         # Dependency buttons
         dep_row = QHBoxLayout()
         
-        self.install_btn = QPushButton("⬇️ Install")
+        self.install_btn = QPushButton(" Install")
+        self.install_btn.setIcon(qta.icon("fa5s.download"))
         self.install_btn.clicked.connect(self.install_dependencies)
         self.install_btn.setEnabled(False)
         self.install_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         dep_row.addWidget(self.install_btn)
         
-        self.reinstall_btn = QPushButton("🔄 Reinstall")
+        self.reinstall_btn = QPushButton(" Reinstall")
+        self.reinstall_btn.setIcon(qta.icon("fa5s.sync"))
         self.reinstall_btn.clicked.connect(self.reinstall_dependencies)
         self.reinstall_btn.setEnabled(False)
         self.reinstall_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -94,25 +118,30 @@ class TerminalTab(QWidget):
         # Run/Stop buttons
         btn_row = QHBoxLayout()
         
-        self.run_btn = QPushButton("▶️ Run Script")
+        self.run_btn = QPushButton(" Run Script")
+        self.run_btn.setIcon(qta.icon("fa5s.play"))
         self.run_btn.clicked.connect(self.run_script)
         self.run_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_row.addWidget(self.run_btn)
         
-        self.stop_btn = QPushButton("⏹️ Stop")
-        self.stop_btn.clicked.connect(self.stop_script)
+        self.stop_btn = QPushButton(" Stop")
+        self.stop_btn.setIcon(qta.icon("fa5s.stop"))
         self.stop_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.stop_btn.clicked.connect(self.stop_script)
         btn_row.addWidget(self.stop_btn)
         
-        self.clear_btn = QPushButton("🗑️ Clear")
+        self.clear_btn = QPushButton(" Clear")
         self.clear_btn.clicked.connect(self.clear_console)
+        self.clear_btn.setIcon(qta.icon("fa5s.trash"))
         self.clear_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_row.addWidget(self.clear_btn)
         
         layout.addLayout(btn_row)
         
         # Console
-        self.console = QTextEdit()
+        self.console = QTextBrowser()
+        self.console.setOpenExternalLinks(True)
+        self.console.setOpenLinks(True)
         self.console.setReadOnly(True)
         self.console.setObjectName("console")
         layout.addWidget(self.console)
@@ -218,10 +247,19 @@ class TerminalTab(QWidget):
         self.install_dependencies()
     
     def load_project(self, project_path):
-        self.project_path = os.path.normpath(project_path)
+        normalized_path = os.path.normpath(project_path)
+        pkg = os.path.join(normalized_path, "package.json")
+
+        # if package.json does not exist project cannot be loaded
+        if not os.path.exists(pkg):
+            QMessageBox.critical(self, "Error", "package.json not found!")
+            return
+
+        # Load project
+        self.project_path = normalized_path
         self.package_manager = self.detect_package_manager(self.project_path)
         
-        self.info.setText(f"📦 {os.path.basename(self.project_path)} | {self.package_manager}")
+        self.info.setText(f"📦 {os.path.basename(self.project_path)} | Used Package Manager {self.package_manager}")
         
         if self.parent_app:
             self.parent_app.save_recent(self.project_path)
@@ -231,10 +269,13 @@ class TerminalTab(QWidget):
             QMessageBox.critical(self, "Error", "package.json not found!")
             return
         
-        data = json.load(open(pkg, encoding="utf-8"))
+        # Load package.json
+        with open(pkg, "r", encoding="utf-8") as f:
+            data = json.load(f)
         
         self.scripts = data.get("scripts", {})
         self.script_list.clear()
+
         for s in self.scripts:
             self.script_list.addItem(f"▶️ {s}")
         
@@ -245,6 +286,7 @@ class TerminalTab(QWidget):
         # Start file watcher
         if self.file_watcher:
             self.file_watcher.stop()
+        
         self.file_watcher = FileWatcherThread(self.project_path)
         self.file_watcher.file_changed.connect(self.on_file_changed)
         self.file_watcher.start()
@@ -278,6 +320,9 @@ class TerminalTab(QWidget):
             self.runner.stop()
     
     def log(self, text):
+        url_pattern = r"((http|https)://[^\s]+)"
+        text = re.sub(url_pattern, r'<a href="\1" style="color:#66ccff;">\1</a>', text)
+
         self.console.append(text)
         # Auto-scroll to bottom
         cursor = self.console.textCursor()
@@ -322,7 +367,7 @@ class AutoRunnerApp(QWidget):
         theme_row = QHBoxLayout()
         theme_row.addWidget(QLabel("Theme:"))
         self.theme_combo = QComboBox()
-        self.theme_combo.addItems(["Miami Vice", "Dark Purple", "Ocean Blue", "Sunset Orange"])
+        self.theme_combo.addItems(themes.keys())
         self.theme_combo.currentTextChanged.connect(self.change_theme)
         if "theme" in self.settings:
             self.theme_combo.setCurrentText(self.settings["theme"])
@@ -387,7 +432,7 @@ class AutoRunnerApp(QWidget):
         self.load_recent()
         self.load_favorites()
         
-        # STYLE BUG FIX: Temani hamma widgetlar tayyor bo'lgandan keyin uramiz
+        # Style BUG FIX: Apply theme after all widgets are ready
         QTimer.singleShot(0, lambda: self.change_theme(self.settings.get("theme", "Miami Vice")))
         
         if project_path:
@@ -396,63 +441,7 @@ class AutoRunnerApp(QWidget):
     def change_theme(self, theme_name):
         self.settings["theme"] = theme_name
         self.save_settings()
-        
-        themes = {
-            "Miami Vice": """
-                QWidget { background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #26004d, stop:1 #004c99); color: white; font-size: 14px; }
-                QLabel#title { font-size: 24px; font-weight: bold; color: #ff8ce6; background: transparent; }
-                QListWidget { background: rgba(255,255,255,0.12); border-radius: 10px; padding: 5px; }
-                QPushButton { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 10px; }
-                QPushButton:hover { background: rgba(255,255,255,0.25); }
-                #console { background: rgba(0,0,0,0.35); border-radius: 10px; padding: 10px; font-family: Consolas; }
-                QLineEdit, QComboBox { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; padding: 5px; color: white; }
-                QTabWidget::pane { border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; }
-                QTabBar::tab { background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 5px; margin: 2px; }
-                QTabBar::tab:selected { background: rgba(255,255,255,0.25); }
-            """,
-
-            "Dark Purple": """
-                QWidget { background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1a0033, stop:1 #330066); color: white; font-size: 14px; }
-                QLabel#title { font-size: 24px; font-weight: bold; color: #cc99ff; background: transparent; }
-                QListWidget { background: rgba(255,255,255,0.12); border-radius: 10px; padding: 5px; }
-                QPushButton { background: rgba(204,153,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 10px; }
-                QPushButton:hover { background: rgba(204,153,255,0.35); }
-                #console { background: rgba(0,0,0,0.4); border-radius: 10px; padding: 10px; font-family: Consolas; }
-                QLineEdit, QComboBox { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; padding: 5px; color: white; }
-                QTabWidget::pane { border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; }
-                QTabBar::tab { background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 5px; margin: 2px; }
-                QTabBar::tab:selected { background: rgba(204,153,255,0.3); }
-            """,
-
-            "Ocean Blue": """
-                QWidget { background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #001a33, stop:1 #004080); color: white; font-size: 14px; }
-                QLabel#title { font-size: 24px; font-weight: bold; color: #66ccff; background: transparent; }
-                QListWidget { background: rgba(255,255,255,0.12); border-radius: 10px; padding: 5px; }
-                QPushButton { background: rgba(102,204,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 10px; }
-                QPushButton:hover { background: rgba(102,204,255,0.35); }
-                #console { background: rgba(0,0,0,0.35); border-radius: 10px; padding: 10px; font-family: Consolas; }
-                QLineEdit, QComboBox { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; padding: 5px; color: white; }
-                QTabWidget::pane { border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; }
-                QTabBar::tab { background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 5px; margin: 2px; }
-                QTabBar::tab:selected { background: rgba(102,204,255,0.3); }
-            """,
-
-            "Sunset Orange": """
-                QWidget { background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #4d1a00, stop:1 #cc5200); color: white; font-size: 14px; }
-                QLabel#title { font-size: 24px; font-weight: bold; color: #ffcc99; background: transparent; }
-                QListWidget { background: rgba(255,255,255,0.12); border-radius: 10px; padding: 5px; }
-                QPushButton { background: rgba(255,153,51,0.25); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 10px; }
-                QPushButton:hover { background: rgba(255,153,51,0.4); }
-                #console { background: rgba(0,0,0,0.35); border-radius: 10px; padding: 10px; font-family: Consolas; }
-                QLineEdit, QComboBox { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; padding: 5px; color: white; }
-                QTabWidget::pane { border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; }
-                QTabBar::tab { background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 5px; margin: 2px; }
-                QTabBar::tab:selected { background: rgba(255,153,51,0.35); }
-            """
-        }
-        
-        style = themes.get(theme_name, themes["Miami Vice"])
-        QApplication.instance().setStyleSheet(style) # Apply to whole app
+        ThemeManager.apply_theme(theme_name)
 
     def add_terminal_tab(self):
         terminal = TerminalTab(self)
@@ -556,6 +545,7 @@ class AutoRunnerApp(QWidget):
 
 def main():
     app = QApplication(sys.argv)
+    AppFonts.load()
     splash = SplashScreen()
     while splash.isVisible():
         app.processEvents()
