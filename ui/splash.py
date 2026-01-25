@@ -47,7 +47,7 @@ class SplashScreen(QWidget):
         """)
 
         # Version label
-        self.version = QLabel("v0.2.1.2 • Enhanced Edition")
+        self.version = QLabel("v0.2.2.0 • Enhanced Edition")
         self.version.setAlignment(Qt.AlignmentFlag.AlignCenter)
         version_font = QFont("Arial", 10)
         self.version.setFont(version_font)

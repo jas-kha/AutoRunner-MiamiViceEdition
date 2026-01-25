@@ -53,7 +53,9 @@ class TerminalTab(QWidget):
         
         # Search box
         self.search_box = QLineEdit()
-        self.search_box.setPlaceholderText("🔍 Search scripts...")
+        self.search_box.setPlaceholderText("Search scripts...")
+        searchIcon = qta.icon("fa5s.search")
+        self.search_box.addAction(searchIcon, QLineEdit.ActionPosition.LeadingPosition)
         self.search_box.textChanged.connect(self.filter_scripts)
         layout.addWidget(self.search_box)
         
@@ -82,34 +84,82 @@ class TerminalTab(QWidget):
         layout.addWidget(self.status_label)
     
     def _create_quick_actions(self):
-        """Create quick action buttons"""
         row = QHBoxLayout()
-        
-        self.open_folder_btn = QPushButton(" Open")
-        self.open_folder_btn.setIcon(QIcon(resource_path("assets/icons/openFolder.png")))
-        self.open_folder_btn.setIconSize(QSize(64, 64))
-        self.open_folder_btn.clicked.connect(self.open_folder)
-        self.open_folder_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        
-        self.open_vscode_btn = QPushButton(" VS Code")
-        self.open_vscode_btn.setIcon(QIcon(resource_path("assets/icons/vscode.png")))
-        self.open_vscode_btn.setIconSize(QSize(64, 64))
-        self.open_vscode_btn.clicked.connect(self.open_in_vscode)
-        self.open_vscode_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.open_vscode_btn.setEnabled(False)
-        
-        self.open_explorer_btn = QPushButton(" Explorer")
-        self.open_explorer_btn.setIcon(QIcon(resource_path("assets/icons/explorer.png")))
-        self.open_explorer_btn.setIconSize(QSize(64, 64))
-        self.open_explorer_btn.clicked.connect(self.open_in_explorer)
-        self.open_explorer_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.open_explorer_btn.setEnabled(False)
-        
+        row.setSpacing(12)
+
+        self.open_folder_btn = self.make_premium_btn(
+            "Open Project",
+            "assets/icons/openFolder.png",
+            self.open_folder
+        )
+
+        self.open_vscode_btn = self.make_premium_btn(
+            "VS Code",
+            "assets/icons/vscode.png",
+            self.open_in_vscode,
+            enabled=False
+        )
+
+        self.open_explorer_btn = self.make_premium_btn(
+            "Explorer",
+            "assets/icons/explorer.png",
+            self.open_in_explorer,
+            enabled=False
+        )
+
         row.addWidget(self.open_folder_btn)
         row.addWidget(self.open_vscode_btn)
         row.addWidget(self.open_explorer_btn)
-        
+
         return row
+
+    def make_premium_btn(self, text, icon_path, callback, enabled=True):
+        BTN_HEIGHT = 48
+        ICON_SIZE = QSize(22, 22)
+
+        btn = QPushButton(text)
+        btn.setIcon(QIcon(resource_path(icon_path)))
+        btn.setIconSize(ICON_SIZE)
+        btn.setFixedHeight(BTN_HEIGHT)
+        btn.clicked.connect(callback)
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn.setEnabled(enabled)
+
+        btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 rgba(255,255,255,0.08),
+                    stop:1 rgba(255,255,255,0.02)
+                );
+                border: 1px solid rgba(255,255,255,0.15);
+                border-radius: 10px;
+                padding: 0 18px;
+                color: white;
+                font-size: 14px;
+            }
+
+            QPushButton:hover {
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 rgba(255,255,255,0.14),
+                    stop:1 rgba(255,255,255,0.06)
+                );
+                border: 1px solid rgba(255,255,255,0.30);
+            }
+
+            QPushButton:pressed {
+                background: rgba(0,0,0,0.25);
+            }
+
+            QPushButton:disabled {
+                color: rgba(255,255,255,0.35);
+                border: 1px solid rgba(255,255,255,0.08);
+                background: rgba(255,255,255,0.02);
+            }
+        """)
+        return btn
+
     
     def _create_dependency_buttons(self):
         """Create dependency management buttons"""

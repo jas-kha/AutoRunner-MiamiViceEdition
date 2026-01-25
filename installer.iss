@@ -3,7 +3,7 @@
 ; -------------------------------
 
 #define MyAppName "Auto Runner"
-#define MyAppVersion "0.2.1.2"
+#define MyAppVersion "0.2.2.0"
 #define MyAppExeName "AutoRunner.exe"
 
 [Setup]
