@@ -37,10 +37,10 @@ Download the latest version from the [Releases](https://github.com/jas-kha/AutoR
 
 | Setup Type | Download | Version |
 |------------|----------|---------|
-| Installer (Recommended) | [AutoRunnerSetup.exe](https://github.com/jas-kha/AutoRunner-MiamiViceEdition/releases/download/download_v0.2.0.0/AutoRunnerSetup.exe) | v0.2.0.0 |
-| Portable | [AutoRunner_portable.exe](https://github.com/jas-kha/AutoRunner-MiamiViceEdition/releases/download/download_v0.2.0.0/AutoRunner_portable.exe) | v0.2.0.0 |
+| Installer `recommend` | [AutoRunnerSetup.exe](https://github.com/jas-kha/AutoRunner-MiamiViceEdition/releases/download/v0.2.2.1/AutoRunnerSetup.exe) | v0.2.2.1 |
+| Portable | [AutoRunner_Portable.exe](https://github.com/jas-kha/AutoRunner-MiamiViceEdition/releases/download/v0.2.2.1/AutoRunner_Portable.exe) | v0.2.2.1 |
 
-#### Stable Versions
+#### Stable Versions (first version)
 
 | Setup Type | Download | Version |
 |------------|----------|---------|
@@ -184,6 +184,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Built with [PyQt6](https://pypi.org/project/PyQt6/)
 - Icons by [QtAwesome](https://pypi.org/project/QtAwesome/)
 - File watching powered by [watchdog](https://pypi.org/project/watchdog/)
+- PyInstaller for packaging the application
 
 ---
 
